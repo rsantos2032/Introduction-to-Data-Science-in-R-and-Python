@@ -1,0 +1,58 @@
+---
+title: "Homework 1"
+author: "Rolando Santos"
+date: "2023-08-31"
+output:
+  html_document: default
+  pdf_document: default
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(mdsr)
+library(tidyverse)
+```
+
+```{r}
+# Loading the Dataset
+cubs <- read.csv("https://raw.githubusercontent.com/gjm112/DSCI401/main/data/cubs_all_time.csv")
+cubs <- cubs %>% rename(Games = G, Wins = W, Losses = L, Runs = R) # Renaming column names for clarity
+```
+
+### Question 1: How many total games have the Cubs won and lost between 1876 and 2022?
+
+```{r}
+# Filtering our dataset to only include rows with years between 1876 and 2022
+cubs_filtered_years <- filter(select(cubs, Year, Games, Wins, Losses), Year > 1875 & Year < 2023)
+sum(select(cubs_filtered_years, Wins))
+```
+
+After summing the entire wins column, we can see that the total number of cubs wins in the dataset is 11141.
+
+### Question 2: What year did the Cubs score the most runs? What year did the Cubs score the fewest runs? Do you have any thoughts about the year that the Cubs scored the fewest runs?
+
+```{r}
+# Selecting Data with might find relevant
+cubs_sort <- select(cubs, Year, Games, Wins, Losses, Runs)
+arrange(cubs_sort, desc(Runs))[1:5, ]
+```
+
+The cubs scored their most runs in the year 1894 with a total of 1056 runs.
+
+```{r}
+arrange(cubs_sort, Runs)[1:5, ]
+```
+The cubs scored their least amount of runs in the year 2020 with a total of 265. A reason for this could be due to the low amount of games played that year, 60, compared to the years they scored a lot of runs, which had more than double the amount of games played.
+
+### Question 3: In how many seasons was the Cubs total attendance (i.e. the variable Attendance) over 3 million?
+
+```{r}
+cubs_filtered_attendance <- filter(select(cubs, Year, Games, Wins, Losses, Attendance), Attendance > 3e6)
+cubs_filtered_attendance
+nrow(cubs_filtered_attendance)
+```
+
+After filtering the data set we end up with a data frame with 12 rows, also confirmed with nrows() returning 12, thus we can conclude that there were 12 years/seasons where the cubs had an attendance of over 3 million.
