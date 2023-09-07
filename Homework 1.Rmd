@@ -1,6 +1,6 @@
 ---
 title: "Homework 1"
-author: "Rolando Santos"
+author: "Rolando Santos - https://github.com/rsantos2032/DSCI401"
 date: "2023-08-31"
 output:
   html_document: default
