@@ -371,6 +371,10 @@ sum(select(cubs_filtered_years, Wins))</code></pre>
 <pre><code>## [1] 11141</code></pre>
 <p>After summing the entire wins column, we can see that the total
 number of cubs wins in the dataset is 11141.</p>
+<pre class="r"><code>sum(select(cubs_filtered_years, Losses))</code></pre>
+<pre><code>## [1] 10592</code></pre>
+<p>After summing the entire wins column, we can see that the total
+number of cubs losses in the dataset is 10592.</p>
 </div>
 <div id="question-2-what-year-did-the-cubs-score-the-most-runs-what-year-did-the-cubs-score-the-fewest-runs-do-you-have-any-thoughts-about-the-year-that-the-cubs-scored-the-fewest-runs" class="section level3">
 <h3>Question 2: What year did the Cubs score the most runs? What year
@@ -385,6 +389,10 @@ arrange(cubs_sort, desc(Runs))[1:5, ]</code></pre>
 ## 3 1929   156   98     54  982
 ## 4 1886   126   90     34  900
 ## 5 1889   136   67     65  867</code></pre>
+<pre class="r"><code>max_runs &lt;- max(select(cubs, Runs))
+filter(select(cubs, Year, Runs), Runs == max_runs)</code></pre>
+<pre><code>##   Year Runs
+## 1 1894 1056</code></pre>
 <p>The cubs scored their most runs in the year 1894 with a total of 1056
 runs.</p>
 <pre class="r"><code>arrange(cubs_sort, Runs)[1:5, ]</code></pre>
@@ -394,10 +402,16 @@ runs.</p>
 ## 3 1981   106   38     65  370
 ## 4 1878    61   30     30  371
 ## 5 1879    83   46     33  437</code></pre>
+<pre class="r"><code>min_runs &lt;- min(select(cubs, Runs))
+filter(select(cubs, Year, Runs), Runs == min_runs)</code></pre>
+<pre><code>##   Year Runs
+## 1 2020  265</code></pre>
 <p>The cubs scored their least amount of runs in the year 2020 with a
 total of 265. A reason for this could be due to the low amount of games
 played that year, 60, compared to the years they scored a lot of runs,
-which had more than double the amount of games played.</p>
+which had more than double the amount of games played. It could also be
+because this was the year where lockdowns and limited contact was
+recommended due to COVID-19.</p>
 </div>
 <div id="question-3-in-how-many-seasons-was-the-cubs-total-attendance-i.e.-the-variable-attendance-over-3-million" class="section level3">
 <h3>Question 3: In how many seasons was the Cubs total attendance

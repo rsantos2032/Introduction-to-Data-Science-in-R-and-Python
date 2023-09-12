@@ -32,6 +32,12 @@ sum(select(cubs_filtered_years, Wins))
 
 After summing the entire wins column, we can see that the total number of cubs wins in the dataset is 11141.
 
+```{r}
+sum(select(cubs_filtered_years, Losses))
+```
+
+After summing the entire wins column, we can see that the total number of cubs losses in the dataset is 10592.
+
 ### Question 2: What year did the Cubs score the most runs? What year did the Cubs score the fewest runs? Do you have any thoughts about the year that the Cubs scored the fewest runs?
 
 ```{r}
@@ -40,12 +46,25 @@ cubs_sort <- select(cubs, Year, Games, Wins, Losses, Runs)
 arrange(cubs_sort, desc(Runs))[1:5, ]
 ```
 
+```{r}
+max_runs <- max(select(cubs, Runs))
+filter(select(cubs, Year, Runs), Runs == max_runs)
+```
+
+
 The cubs scored their most runs in the year 1894 with a total of 1056 runs.
 
 ```{r}
 arrange(cubs_sort, Runs)[1:5, ]
 ```
-The cubs scored their least amount of runs in the year 2020 with a total of 265. A reason for this could be due to the low amount of games played that year, 60, compared to the years they scored a lot of runs, which had more than double the amount of games played.
+
+```{r}
+min_runs <- min(select(cubs, Runs))
+filter(select(cubs, Year, Runs), Runs == min_runs)
+```
+
+
+The cubs scored their least amount of runs in the year 2020 with a total of 265. A reason for this could be due to the low amount of games played that year, 60, compared to the years they scored a lot of runs, which had more than double the amount of games played. It could also be because this was the year where lockdowns and limited contact was recommended due to COVID-19.
 
 ### Question 3: In how many seasons was the Cubs total attendance (i.e. the variable Attendance) over 3 million?
 

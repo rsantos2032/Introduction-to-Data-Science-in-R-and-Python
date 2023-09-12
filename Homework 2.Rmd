@@ -1,0 +1,42 @@
+---
+title: "Homework 2"
+author: "Rolando Santos - https://github.com/rsantos2032/DSCI401"
+date: "2023-09-07"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(mdsr)
+library(tidyverse)
+library(Lahman)
+library(mdsr)
+```
+
+```{r}
+Teams
+teams_subset <- filter(select(Teams, yearID, W, L), yearID >= 2000 & yearID <= 2009)
+teams_subset
+```
+
+```{r}
+teams_subset <- filter(select(Teams, yearID, teamID, W, L, HR), teamID == "CHN" & HR >= 200)
+teams_subset
+```
+
+```{r}
+median(teams_subset$W)
+```
+
+```{r}
+years <- Teams$yearID
+
+```
+
+```{r}
+data(Violations)
+```
+
