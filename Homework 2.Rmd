@@ -16,27 +16,117 @@ library(Lahman)
 library(mdsr)
 ```
 
+### Question 1: Using the Teams data frame in the Lahman package:
+
+#### a. Create a data frame that is a subset of the Teams data frame that contains only the years from 2000 through 2009 and the variables yearID, W, and L.
+
 ```{r}
-Teams
-teams_subset <- filter(select(Teams, yearID, W, L), yearID >= 2000 & yearID <= 2009)
-teams_subset
+teams_subset <- Teams %>% select(yearID, W, L) %>% filter(yearID >= 2000 & yearID <= 2009)
+teams_subset[1:10, ]
+```
+
+#### b. How many years did the Chicago Cubs (teamID is “CHN”) hit at least 200 HRs in a season and what was the median number of wins in those seasons.
+
+```{r}
+summarized_win <- Teams %>% filter(teamID == "CHN") %>% group_by(yearID) %>% summarize(sum_hr = sum(HR)) %>% filter(sum_hr >= 200)
+summarized_win
 ```
 
 ```{r}
-teams_subset <- filter(select(Teams, yearID, teamID, W, L, HR), teamID == "CHN" & HR >= 200)
-teams_subset
+median(summarized_win$sum_hr)
+```
+
+There were 7 years where the cubs the cubs over had 200 home runs in that season. The median number of wins is 212.
+
+#### c. Create a factor called election that divides the yearID into 4-year blocks that correspond to U.S. presidential terms. The first presidential term started in 1788. They each last 4 years and are still on the schedule set in 1788. During which term were the most home runs been hit?
+
+```{r}
+Teams %>% mutate(election = factor(Teams$yearID - Teams$yearID %% 4)) %>% filter(HR == max(HR)) %>% select(teamID, election, HR)
+```
+
+The most home runs by a single team was done during the 2016 presidential term. From google this was achieved by the Minnesota Twins in 2019.
+
+#### d. Make a line plot of total home runs per season and stratify by league. Remove observations where league is missing.
+
+##### As a single plot
+
+```{r}
+library(ggplot2)
+
+#For some reason NA is seen as a string so !is.na() was not working
+Teams %>% filter(lgID != "NA") %>% 
+  ggplot(
+  aes(x = yearID, y = HR, color = lgID)
+) + 
+  geom_line() + 
+  xlab("Year") + 
+  ylab("Home Runs") +
+  geom_smooth(se = FALSE)
+```
+
+##### As a faceted plot
+
+```{r}
+Teams %>% filter(lgID != "NA") %>% 
+  ggplot(
+  aes(x = yearID, y = HR)
+) + 
+  geom_line() + 
+  xlab("Year") + 
+  ylab("Home Runs") +
+  geom_smooth(se = FALSE) + 
+  facet_wrap(~lgID)
+```
+
+
+#### e. Create an indicator variable called “winning record” which is defined as TRUE if the number of wins is greater than the number of losses and FALSE otherwise. Plot a scatter plot of Runs (R) vs Runs against (RA) with the color of each point showing whether that team had a winning record or not.
+
+```{r}
+Teams <-Teams %>% mutate(winning_record = W > L)
+
+Teams %>% ggplot(
+  aes(x = R, y = RA, color = winning_record)
+) + 
+  geom_point() +
+  xlab("Runs") + 
+  ylab("Runs Against") +
+  labs(color = "Winning Record")
+```
+
+### Question 2: The Violations data set in the mdsr package contains information regarding the outcome of health inspections of restaurants in New York City.
+
+#### a. What proportion of inspections in each boro were given a grade of A? (Missing values should be counted as not an A grade.)
+
+```{r}
+Violations %>% group_by(boro) %>% summarize(prop = mean(grade == "A", na.rm = TRUE))
+```
+
+#### b.  Find the top ten dba’s with the most number of inspections. Then compute the average score for each of these dba’s andsort by mean score. Which of these top 10 had the lowest average inspection score?
+
+```{r}
+most_violations = (Violations %>% group_by(dba) %>% summarize(num_violations = n()) %>% arrange(-num_violations))[1:10, ]
+most_violations
 ```
 
 ```{r}
-median(teams_subset$W)
+Violations %>% filter(dba %in% most_violations$dba) %>% group_by(dba) %>% summarize(avg = mean(score, na.rm = TRUE)) %>% arrange(avg) 
+```
+
+From the results it appears that STARBUCKS had the lowest mean average with a mean score of 11.66435.
+
+#### c. Use these data to calculate the median violation score by zip code for zip codes in Manhattan with 50 or more inspections. What pattern do you see between the number of inspections and the median score?
+
+```{r}
+inspections_manhattan = Violations %>% filter(boro == "MANHATTAN") %>% group_by(zipcode) %>% summarize(num_inspections = n(), med = median(score, na.rm = TRUE)) %>% filter(num_inspections >= 50) 
+inspections_manhattan
 ```
 
 ```{r}
-years <- Teams$yearID
-
+inspections_manhattan %>% ggplot(
+  aes(x = num_inspections, y = med)
+) + 
+  geom_point() +
+  geom_smooth(method = "lm")
 ```
 
-```{r}
-data(Violations)
-```
-
+From the graph we can see that most zip codes with a low median score have less occurences of inspections compared to median score of ~16 and above.
