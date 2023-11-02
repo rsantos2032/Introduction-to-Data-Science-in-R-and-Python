@@ -368,18 +368,14 @@ library(mdsr)</code></pre>
 contains only the years from 2000 through 2009 and the variables yearID,
 W, and L.</h4>
 <pre class="r"><code>teams_subset &lt;- Teams %&gt;% select(yearID, W, L) %&gt;% filter(yearID &gt;= 2000 &amp; yearID &lt;= 2009)
-teams_subset[1:10, ]</code></pre>
-<pre><code>##    yearID  W  L
-## 1    2000 82 80
-## 2    2000 85 77
-## 3    2000 95 67
-## 4    2000 74 88
-## 5    2000 85 77
-## 6    2000 95 67
-## 7    2000 65 97
-## 8    2000 85 77
-## 9    2000 90 72
-## 10   2000 82 80</code></pre>
+head(teams_subset)</code></pre>
+<pre><code>##   yearID  W  L
+## 1   2000 82 80
+## 2   2000 85 77
+## 3   2000 95 67
+## 4   2000 74 88
+## 5   2000 85 77
+## 6   2000 95 67</code></pre>
 </div>
 <div id="b.-how-many-years-did-the-chicago-cubs-teamid-is-chn-hit-at-least-200-hrs-in-a-season-and-what-was-the-median-number-of-wins-in-those-seasons." class="section level4">
 <h4>b. How many years did the Chicago Cubs (teamID is “CHN”) hit at
@@ -408,12 +404,13 @@ that season. The median number of wins is 212.</p>
 presidential term started in 1788. They each last 4 years and are still
 on the schedule set in 1788. During which term were the most home runs
 been hit?</h4>
-<pre class="r"><code>Teams %&gt;% mutate(election = factor(Teams$yearID - Teams$yearID %% 4)) %&gt;% filter(HR == max(HR)) %&gt;% select(teamID, election, HR)</code></pre>
-<pre><code>##   teamID election  HR
-## 1    MIN     2016 307</code></pre>
-<p>The most home runs by a single team was done during the 2016
-presidential term. From google this was achieved by the Minnesota Twins
-in 2019.</p>
+<pre class="r"><code>Teams %&gt;% mutate(election = factor(((Teams$yearID - Teams$yearID %% 4) - 1788)/4 + 1)) %&gt;% group_by(election) %&gt;% summarise(election_HR = sum(HR)) %&gt;% filter(election_HR == max(election_HR))</code></pre>
+<pre><code>## # A tibble: 1 × 2
+##   election election_HR
+##   &lt;fct&gt;          &lt;int&gt;
+## 1 58             24076</code></pre>
+<p>The most home runs by term was achieved in the 58 presidential
+election term (2016).</p>
 </div>
 <div id="d.-make-a-line-plot-of-total-home-runs-per-season-and-stratify-by-league.-remove-observations-where-league-is-missing." class="section level4">
 <h4>d. Make a line plot of total home runs per season and stratify by
@@ -480,16 +477,17 @@ in New York City.</h3>
 <div id="a.-what-proportion-of-inspections-in-each-boro-were-given-a-grade-of-a-missing-values-should-be-counted-as-not-an-a-grade." class="section level4">
 <h4>a. What proportion of inspections in each boro were given a grade of
 A? (Missing values should be counted as not an A grade.)</h4>
-<pre class="r"><code>Violations %&gt;% group_by(boro) %&gt;% summarize(prop = mean(grade == &quot;A&quot;, na.rm = TRUE))</code></pre>
+<pre class="r"><code>#Using %in% due to grade == A returning NA whenever grade is NA
+Violations %&gt;% mutate(a_grade = ifelse(grade %in% &quot;A&quot;, TRUE, FALSE)) %&gt;% group_by(boro) %&gt;% summarize(prop = mean(a_grade, na.rm = TRUE))</code></pre>
 <pre><code>## # A tibble: 6 × 2
 ##   boro           prop
 ##   &lt;chr&gt;         &lt;dbl&gt;
-## 1 BRONX         0.739
-## 2 BROOKLYN      0.729
-## 3 MANHATTAN     0.746
-## 4 Missing       0.825
-## 5 QUEENS        0.724
-## 6 STATEN ISLAND 0.769</code></pre>
+## 1 BRONX         0.352
+## 2 BROOKLYN      0.330
+## 3 MANHATTAN     0.342
+## 4 Missing       0.452
+## 5 QUEENS        0.329
+## 6 STATEN ISLAND 0.362</code></pre>
 </div>
 <div id="b.-find-the-top-ten-dbas-with-the-most-number-of-inspections.-then-compute-the-average-score-for-each-of-these-dbas-andsort-by-mean-score.-which-of-these-top-10-had-the-lowest-average-inspection-score" class="section level4">
 <h4>b. Find the top ten dba’s with the most number of inspections. Then

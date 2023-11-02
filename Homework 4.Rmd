@@ -1,0 +1,107 @@
+---
+title: "Homework 4"
+author: "Rolando Santos - https://github.com/rsantos2032/DSCI401"
+date: "2023-10-21"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(Lahman)
+library(mosaicData)
+library(ggplot2)
+```
+
+### Question 1: Answer the questions below:
+
+#### a. Use the HELPrct data from the mosaicData to calculate the mean of all numeric variables (be sure to exclude missing values).
+
+```{r}
+head(HELPrct[, 1:6])
+```
+
+```{r}
+HELPrct %>%
+  select(where(is.numeric)) %>%
+  map_dbl(mean, na.rm = TRUE)
+```
+
+#### b. Find the mean of all the numeric variables stratified by sex and age group where age groups are defined as ranges of 10 years (i.e. 0-10, 10-20, 20-30, etc).
+
+```{r}
+create_age_group <- function(x){
+  floor_val <- floor(x/10) * 10
+  roof_val <- round(x/10) * 10
+  
+  #Checks that an age is divisble by 10
+  if (floor_val == roof_val){ 
+    roof_val <- roof_val + 10 #We'll add their age to the next group i.e. 20: 20-30  
+  }
+  return(paste0(floor_val, "-", roof_val))
+}
+create_age_group <- Vectorize(create_age_group)
+
+HELPrct_age <- HELPrct %>% 
+  mutate(age_group = create_age_group(age)) %>%
+  group_by(sex, age_group) %>%
+  summarise_at(.vars = HELPrct %>% 
+                 select(where(is.numeric)) %>% 
+                 colnames(), .funs = c(mean = "mean"), na.rm = TRUE)
+HELPrct_age
+```
+
+
+#### c. Using the data set created in the previous problem, create a set of line plots with the average age of the age group on the x-axis and each of other numeric variables on the y-axis in separate plots stratified by sex. (Note: You are not allowed to use a for loop here or simply copy-and- paste 20 times!)
+
+```{r}
+
+plot_fn <- function(var, data = HELPrct_age){
+  return(print(data %>%
+    ggplot(
+      aes_string(x = "age_mean", y = var, color = "sex")
+    ) + 
+    geom_point() +
+    geom_line() + 
+    labs(color = "Sex")))
+}
+plot_vfn <- Vectorize(plot_fn)
+
+vars <- HELPrct_age %>% select(contains("_mean")) %>% colnames()
+remove <- c("sex", "age_mean")
+vars <- vars[!(vars %in% remove)]
+
+plot_vfn(vars)
+```
+
+
+### Question 2: The team IDs corresponding to Brooklyn baseball teams from the Teams data frame from the Lahman package are listed below. Use map int() to find the number of seasons in which each of those teams played by calling a function called count seasons.
+
+```{r}
+head(Teams[, 1:6])
+```
+
+```{r}
+bk_teams <- c("BR1", "BR2", "BR3", "BR4", "BRO", "BRP", "BRF")
+```
+
+```{r}
+count_seasons <- function(ID, data = Teams){
+  num_seasons <- data %>%
+    filter(teamID == ID) %>%
+    group_by(teamID) %>%
+    summarize(num_seasons = sum(n())) %>%
+    pull(num_seasons)
+  return(num_seasons)
+}
+total_seasons <- map_int(bk_teams, count_seasons)
+total_seasons
+```
+
+```{r}
+paste0(bk_teams, " has: ", total_seasons, " total season(s)")
+```
+

@@ -1,0 +1,102 @@
+---
+title: "Homework 3"
+author: "Rolando Santos - https://github.com/rsantos2032/DSCI401"
+date: "2023-10-03"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(mdsr)
+library(tidyverse)
+library(Lahman)
+library(nycflights13)
+```
+
+### Question 1: Use the Batting, Pitching, and People tables in the Lahman package to answer the following questions:
+
+#### a. Name every player in baseball history who has accumulated at least 300 home runs (HR) AND at least 300 stolen bases (SB). You can find the first and last name of the player in the People data frame. Join this to your result along with the total home runs and total bases stolen for each of these elite players.
+
+```{r}
+Batting %>% group_by(playerID) %>% summarize(totalSB = sum(SB), totalHR = sum(HR)) %>% filter(totalHR >= 300 & totalSB >= 300) %>% left_join(People %>% select(playerID, nameFirst, nameLast), by = c("playerID" = "playerID"))
+```
+
+
+#### b. Similarly, name every pitcher in baseball history who has accumulated at least 300 wins (W) and at least 3,000 strikeouts (SO).
+
+```{r}
+Pitching %>% group_by(playerID) %>% summarize(totalW = sum(W), totalSO = sum(SO)) %>% filter(totalW >= 300 & totalSO >= 3000) %>% left_join(People %>% select(playerID, nameFirst, nameLast), by = c("playerID" = "playerID"))
+```
+
+
+#### c. Identify the name and year of every player who has hit at least 50 home runs in a single season. Which player had the lowest batting average in that season?
+
+```{r}
+Batting %>% group_by(playerID, yearID) %>% summarise(HR = sum(HR), BA = (sum(H)/sum(AB))) %>% filter(HR >= 50) %>% left_join(People %>% select(playerID, nameFirst, nameLast), by = c("playerID" = "playerID")) %>% arrange(BA)
+```
+From the dataset, it appears that Pete Alonso had the lowest batting average in the 2019 season.
+
+### Question 2: Use the nycflights13 package and the flights and planes tables to answer the following questions:
+
+#### a. What is the oldest plane (specified by the tailnum variable) that flew from New York City airports in 2013?
+
+```{r}
+planes %>% rename(created = year) %>% mutate(age = 2013 - created) %>%  left_join(flights, by = c("tailnum" = "tailnum")) %>% select(tailnum, created, age) %>% arrange(-age) %>% head(1)
+```
+The oldest plane by tailnum is N381AA, which was created in 1956 and was 57 in 2013.
+
+#### b. How many airplanes that flew from New York City are included in the planes table?
+
+```{r}
+flights %>% inner_join(planes, by = c("tailnum" = "tailnum")) %>% group_by(tailnum) %>% summarize(included = n()) %>% nrow()
+```
+
+There are 3322 airplanes from the flights table that are included in the planes table.
+
+### Question 3: Generate the code to convert the following data frame to wide format.
+
+```{r}
+dat <- data.frame(
+  grp = c("A","A","B","B"),
+  sex = c("F","M","F","M"),
+  meanL = c(0.225,0.47,0.325,0.547),
+  sdL = c(0.106,.325,.106,.308),
+  meanR = c(.34,.57,.4,.647),
+  sdR = c(0.0849, 0.325, 0.0707, 0.274)
+)
+dat
+```
+
+```{r}
+dat_wide <- dat %>% pivot_wider(names_from = sex, values_from = c(meanL, sdL, meanR, sdR))
+colnames(dat_wide) <- c('grp', 'F.meanL', 'M.meanL', 'F.sdL', 'M.sdL', 'F.meanR', 'M.meanR', 'F.sdR', 'M.sdR')
+dat_wide
+```
+
+### Question 4: Consider the pccc icd10 dataset.
+
+```{r}
+library(pccc)
+head(pccc_icd10_dataset)
+```
+
+#### a. Remove all the columns labeled with ”g” and a number.
+
+```{r}
+pccc_icd10_adj <- pccc_icd10_dataset %>% select(-starts_with("g"))
+head(pccc_icd10_adj)
+```
+
+#### b. Convert this to a long data set with three columns: id, type (pc or dx), and code.
+
+```{r}
+pccc_icd10_adj <- pccc_icd10_adj %>% 
+  pivot_longer(cols = -id, 
+               names_to = "type",
+               values_to = "code")
+head(pccc_icd10_adj)
+dim(pccc_icd10_adj)
+```

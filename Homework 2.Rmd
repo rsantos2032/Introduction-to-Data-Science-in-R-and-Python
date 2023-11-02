@@ -22,7 +22,7 @@ library(mdsr)
 
 ```{r}
 teams_subset <- Teams %>% select(yearID, W, L) %>% filter(yearID >= 2000 & yearID <= 2009)
-teams_subset[1:10, ]
+head(teams_subset)
 ```
 
 #### b. How many years did the Chicago Cubs (teamID is “CHN”) hit at least 200 HRs in a season and what was the median number of wins in those seasons.
@@ -41,10 +41,11 @@ There were 7 years where the cubs the cubs over had 200 home runs in that season
 #### c. Create a factor called election that divides the yearID into 4-year blocks that correspond to U.S. presidential terms. The first presidential term started in 1788. They each last 4 years and are still on the schedule set in 1788. During which term were the most home runs been hit?
 
 ```{r}
-Teams %>% mutate(election = factor(Teams$yearID - Teams$yearID %% 4)) %>% filter(HR == max(HR)) %>% select(teamID, election, HR)
+Teams %>% mutate(election = factor(((Teams$yearID - Teams$yearID %% 4) - 1788)/4 + 1)) %>% group_by(election) %>% summarise(election_HR = sum(HR)) %>% filter(election_HR == max(election_HR))
 ```
 
-The most home runs by a single team was done during the 2016 presidential term. From google this was achieved by the Minnesota Twins in 2019.
+
+The most home runs by term was achieved in the 58 presidential election term (2016).
 
 #### d. Make a line plot of total home runs per season and stratify by league. Remove observations where league is missing.
 
@@ -98,7 +99,8 @@ Teams %>% ggplot(
 #### a. What proportion of inspections in each boro were given a grade of A? (Missing values should be counted as not an A grade.)
 
 ```{r}
-Violations %>% group_by(boro) %>% summarize(prop = mean(grade == "A", na.rm = TRUE))
+#Using %in% due to grade == A returning NA whenever grade is NA
+Violations %>% mutate(a_grade = ifelse(grade %in% "A", TRUE, FALSE)) %>% group_by(boro) %>% summarize(prop = mean(a_grade, na.rm = TRUE))
 ```
 
 #### b.  Find the top ten dba’s with the most number of inspections. Then compute the average score for each of these dba’s andsort by mean score. Which of these top 10 had the lowest average inspection score?

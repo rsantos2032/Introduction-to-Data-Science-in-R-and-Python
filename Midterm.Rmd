@@ -1,0 +1,218 @@
+---
+title: "Midterm"
+author: "Rolando Santos"
+date: "2023-10-19"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(ggplot2)
+```
+
+```{r}
+employee <- read.csv(
+  "https://raw.githubusercontent.com/gjm112/DSCI401/main/data/Employee.csv"
+  )
+stops <- read.csv(
+  "https://raw.githubusercontent.com/gjm112/DSCI401/main/data/CTA_List_of_L_Stops.csv"
+)
+entries <- read.csv(
+  "https://raw.githubusercontent.com/gjm112/DSCI401/main/data/CTA_entries.csv"
+)
+```
+
+### Question 1: Answer the following questions using the Employee data set.
+
+```{r}
+head(employee)
+```
+
+
+#### a. For each education level, what percentage of the employees are female?
+
+```{r}
+employee %>%
+  group_by(Education) %>%
+  summarise(Percentage_Female = mean(Gender == "Female"))
+```
+
+#### b. On a single plot, make three line plots, one for each City, with the variable JoiningYear on the x-axis and cumulative number of hires up to that year on the y-axis (Note: Each row is considered a hire).
+
+Single plot with 3 lines.
+
+```{r}
+employee %>%
+  group_by(JoiningYear, City) %>%
+  summarise(Hires = n()) %>%
+  ggplot(
+    aes(x = JoiningYear, y = Hires, color = City)
+  ) + 
+  geom_point() + 
+  geom_line() + 
+  xlab("Joining Year") + 
+  ylab("# of Hires") + 
+  labs(color = "City")
+```
+
+Single Plot with multiple plots per city.
+
+```{r}
+employee %>%
+  group_by(JoiningYear, City) %>%
+  summarise(Hires = n()) %>%
+  ggplot(
+    aes(x = JoiningYear, y = Hires)
+  ) + 
+  geom_point() + 
+  geom_line() + 
+  xlab("Joining Year") + 
+  ylab("# of Hires") + 
+  facet_wrap(~City)
+```
+
+  #### c. Create side-by-side boxplots of Age vs Gender faceted by City on the rows and Education on the columns.
+
+```{r}
+employee %>%
+  ggplot(
+    aes(x = Age, y = Gender)
+  ) + 
+  geom_boxplot() + 
+  facet_grid(City ~ Education)
+```
+
+
+#### d. For each JoiningYear, compute the ratio of the number of Bachelor’s degrees hired to Ph.D’s hired. Which year has the highest ratio and what is that ratio? For each City, compute the ratio of the number of Bachelor’s degrees hired to Ph.D’s hired. Which city has the highest ratio and what is that ratio? You have now found a year and a city. How many master’s level people were hired in the year and city that you just found?
+
+```{r}
+employee %>% 
+  group_by(JoiningYear) %>%
+  summarise(Ratio = sum(Education == "Bachelors")/sum(Education == "PHD")) %>%
+  arrange(-Ratio)
+```
+
+From our data we see that 2012 had the highest ratio (31.5:1) of Bachelors/PHD new hires.
+
+```{r}
+employee %>% 
+  group_by(City) %>%
+  summarise(Ratio = sum(Education == "Bachelors")/sum(Education == "PHD")) %>%
+  arrange(-Ratio)
+```
+
+From our data we see that the city with the highest ratio (42.166667:1) of Bachelors/PHD new hires was Pune.
+
+```{r}
+employee %>%
+  filter(City == "Pune" & JoiningYear == 2012) %>%
+  group_by(Education) %>%
+  summarise(Hires = n())
+```
+
+From our data, we see that there were 13 Masters students hired in 2012 in the city of Pune.
+
+### Question 2: Answer the following questions using the entries and stops data sets related to the Chicago Transit Authority (CTA).
+
+```{r}
+head(entries)
+```
+
+```{r}
+head(stops)
+```
+
+
+#### a. Using the stops data set, create a data set that only includes stops on the red line and removes duplicated MAP IDs. Merge the stops onto the entries data set. (Note: station id in entries links to MAP ID in stops!)
+
+```{r}
+stops_red_line <- stops %>%
+  filter(RED == "true")
+stops_red_line <- stops_red_line[!duplicated(stops_red_line$MAP_ID), ]
+
+head(stops_red_line)
+```
+
+```{r}
+entries_red_line <- entries %>% 
+  inner_join(stops_red_line, by = c("station_id" = "MAP_ID"))
+head(entries_red_line)
+```
+
+
+#### b. Using this merged data set, compute the average number of rides per day for each station on the red line. Next compute the 1 average number of rides per day for each station for each month (i.e. average rides per day at Loyola at January, average rides per day at Loyola in February, etc.).
+
+```{r}
+avg_rides_per_day <- entries_red_line %>%
+  group_by(stationname) %>%
+  summarise(average = mean(rides))
+avg_rides_per_day
+```
+
+```{r}
+convert.to.month <- function(x){
+  month.num <- substr(x, 1, 2)
+  return(month.name[as.numeric(month.num)])
+}
+
+avg_rides_per_month <- entries_red_line %>%
+  mutate(month = convert.to.month(date)) %>%
+  group_by(stationname,month) %>%
+  summarise(average_month = mean(rides))
+avg_rides_per_month
+```
+
+
+#### c.  Using this two variables found in the previous part, for each station create a variable called ratio which is the ratio of rides per day per month divided by rides per day. (This is essentially a measure of how far away ridership in a given month gets away from the overall average at a stop with values larger than 1 indicating a sharp increase and values less than 1 a sharp decrease). Display the top ten largest ratios and comment on and reason you believe these particular stops and months are the top of the list.
+
+```{r}
+ratio_rides <- avg_rides_per_month %>% 
+  left_join(avg_rides_per_day, c("stationname" = "stationname")) %>%
+  group_by(stationname, month) %>%
+  summarise(ratio = average_month/average) %>%
+  arrange(-ratio)
+head(ratio_rides, 10)
+```
+
+For the Addison-North Main stations and Sox-35th-Dan Ryan stations, they will typically have more traffic since during these months June, July, August, September is the middle/end of baseball season.
+
+Loyola station during September also makes sense because it is the beginning of the school year.
+
+Fullerton and Harrison are probably Fall events considering its September/October.
+
+#### d.  Compute the standard deviation of this ratio for each station and find the stations with the 5 largest standard deviations. Using these five stations, a line plot (one line for each station) with month on the x-axis and ratio on the y-axis.
+
+```{r}
+highest_sd_stations <- ratio_rides %>%
+  group_by(stationname) %>%
+  summarise(stand_dev = sd(ratio)) %>%
+  arrange(-stand_dev) %>%
+  head(5)
+highest_sd_stations
+```
+
+```{r}
+ratio_rides %>%
+  filter(stationname %in% highest_sd_stations$stationname) %>%
+  ggplot(
+    aes(
+      x = as.integer(factor(month, levels = month.name)), 
+      y = ratio, 
+      color = stationname)
+  ) + 
+  geom_point() + 
+  geom_line() + 
+  xlab("Month") + 
+  ylab("Ratio") + 
+  labs(color = "Station") + 
+  scale_x_continuous(
+    breaks = seq_along(month.name), 
+    labels = month.abb
+  )
+ 
+```
+
