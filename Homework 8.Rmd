@@ -1,0 +1,30 @@
+---
+title: "Homework 8"
+author: "Rolando Santos - https://github.com/rsantos2032/DSCI401"
+date: "2023-12-07"
+output: html_document
+---
+
+### Question 1: Answer all these questions using the babynames data set from the babynames package in R.
+
+```{r}
+library(babynames)
+library(tidyverse)
+
+nam <- babynames %>% distinct(name)  %>% pull(name) %>% unique() %>% str_to_lower()
+```
+
+#### a. Find all the babynames that are exactly 4 letters long, begin with two vowels (a, e, i , o, u) , and end in the letter y. How many are there?
+
+```{r}
+str_view(nam, "^[aeiou]{2}.y$")
+length(str_view(nam, "^[aeiou]{2}.y$"))
+```
+
+#### b. Find all the babynames that begin and end with the letter g. How many are there?
+
+```{r}
+str_view(nam, "^g.*.g$")
+length(str_view(nam, "^g.*.g$"))
+```
+

@@ -1,0 +1,50 @@
+---
+title: "Homework 6"
+author: "Rolando Santos - https://github.com/rsantos2032/DSCI401"
+date: "2023-11-02"
+output: html_document
+---
+
+```{r setup, include=FALSE}
+knitr::opts_chunk$set(echo = TRUE)
+```
+
+```{r message = FALSE, warning = FALSE}
+library(tidyverse)
+library(lubridate)
+library(mdsr)
+library(macleish)
+library(ggplot2)
+library(plotly)
+```
+
+### Question: Using the data whately 2015 from the macleish package, create an interactive plot using plotly (or ggplotly) displaying time (in days) on the x-axis and temperature on the y-axis with three lines: one for the high temperature of the day, one for the average temperature of the day, and one for the low temperature of the day. A csv version of the file can be found here: https://www.dropbox.com/s/m2nt50qanpijp0m/whately2015.csv?dl=0
+
+```{r}
+head(whately_2015)
+```
+
+```{r}
+g <- whately_2015 %>%
+  mutate(date = as.Date(when)) %>%
+  group_by(date) %>%
+  summarise(
+    High = max(temperature), 
+    Average = mean(temperature), 
+    Low = min(temperature)
+  ) %>% 
+  pivot_longer(
+    c(High, Average, Low), 
+    names_to = "type", 
+    values_to = "temp"
+  ) %>% ggplot(
+    aes(x = date, y = temp, color = type)
+  ) +
+  geom_line() + 
+  xlab("Date") + 
+  ylab("Temperature") + 
+  labs(color = "Type")
+
+ggplotly(g)
+```
+
